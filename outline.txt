@@ -1,0 +1,54 @@
+connect local repository to heroku
+create route and send something to check if work
+download nodemon to enable automatic update when save
+
+google oauth for first time users: 
+    -enable google+ api
+    -create new project
+    - configure consent screen
+    -create oauth client ID (sort of like an account which lets you use oauth service, but instead of an account, it's an id)
+    - retreive client id and secret
+
+use passport to connect app to oauth services
+    -install passport(general)
+    -we are using google oauth, so we must install that specific strategy. in this case: npm i passport-google-oauth20
+    -require both modules in app
+    -tell passport to use google strategy.
+    -configure google strategy with id and secret, so google knows where redirected users are coming. also, add what you want to do with tokens when received
+
+create route handler which will start authenticatioin process when visited
+    -instead of (req,res)=>{}, use passport.authenticate(arg1, arg2)
+        -arg1: check docs to see string associated with strategy
+        -arg2: an object which contains "scope" property which specifies what parts of the user's profile we want to access. Scope property has a value of an array of strings.
+
+create route handler which user will be redirected to after permission is granted
+    -instead of (req,res)=>{}, use passport.authenticate('google')
+        -magically, passport can see the code in the url redirected to after permission is granted
+        -passport exchanges this code with google. If successfull, the callback in the second argument of the GoogleStrategy() construction is called.
+
+second argument of GoogleStrategy() constructor:
+    - what do we want to with the profile?
+        - create an account associated with this profile id in mongo database
+        - this account(instance in the collection of users) will contain all information relevant to this user
+
+How to create mongo database?
+    - Create/login to mongo db account
+    - create a new project
+    create new cluster
+    - connect cluster to app using mongoose(npm i mongoose)(mongoose.connect(mongoURI))
+    - create model class using model schema(mongoose.model('name', userSchema))
+    - in 2nd argument callback function, create instance of model class (new mongoose.model('users')({property:value}).save())
+
+-prevent duplicates of same googleId using findOne()
+
+-call done() after creating account. pass (null, existingUser).
+
+when user logs in. store cookie in user's browser so they don't have to repeatedly log in. do this using passport.serialize
+
+let express know how to handle cookies by setting up middle ware 
+    - app.use(cookieSession)
+        cookie session is a constructor and takes an object with two properties
+        - maxAge. cookie expiration date
+        - keys. encryption code which is an array of strings. in this case, this is one string
+    - app.use(passport.initialize())
+    - app.use(passport.session())
